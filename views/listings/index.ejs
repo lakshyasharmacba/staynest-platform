@@ -1,0 +1,220 @@
+<% layout('layouts/boilerplate') -%>
+
+<section class="hero-search-wrapper py-3 py-md-4">
+  <div class="hero-search-card rounded-4 shadow-sm">
+    <div class="hero-search-content">
+      <div class="text-center mb-3">
+        <span class="eyebrow"><i class="fa-solid fa-compass me-1"></i> Explore stays</span>
+        <h1 class="hero-title mb-1">Find a place you'll love</h1>
+        <p class="text-muted mb-0">Search by destination, country, property name, or stay style.</p>
+      </div>
+
+      <form action="/" method="GET" class="main-search-form" id="mainSearchForm" role="search">
+        <div class="search-input-group position-relative">
+          <i class="fa-solid fa-magnifying-glass search-icon" aria-hidden="true"></i>
+          <input
+            type="search"
+            name="search"
+            id="heroSearchInput"
+            class="form-control hero-search-field"
+            placeholder="Try Mumbai, Beach, Villa, India..."
+            value="<%= search || '' %>"
+            autocomplete="off"
+            aria-label="Search stays"
+          />
+          <button
+            type="button"
+            id="clearLiveSearch"
+            class="clear-search-btn"
+            aria-label="Clear search"
+            style="<%= search ? '' : 'display:none;' %>"
+          >
+            <i class="fa-solid fa-circle-xmark"></i>
+          </button>
+          <button type="submit" class="search-submit-btn">
+            <i class="fa-solid fa-magnifying-glass me-2"></i>
+            Search
+          </button>
+        </div>
+      </form>
+
+      <div class="search-meta mt-3">
+        <span class="result-pill">
+          <i class="fa-solid fa-house-chimney me-1"></i>
+          <strong><%= allListing.length %></strong> stays found
+        </span>
+        <% if (search) { %>
+          <a href="/" class="clear-result-link">
+            <i class="fa-solid fa-xmark me-1"></i> Clear search
+          </a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="category-section mb-4">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h6 class="fw-bold mb-0">Explore by type</h6>
+    <span class="text-muted small">Tap an icon to filter</span>
+  </div>
+
+  <div id="filters" class="d-flex align-items-start gap-2 gap-md-3 overflow-x-auto py-2">
+    <a href="/" class="filter <%= !search ? 'filter-active' : '' %>">
+      <span class="filter-icon"><i class="fa-solid fa-fire"></i></span>
+      <span>Trending</span>
+    </a>
+    <a href="/?search=rooms" class="filter <%= search === 'rooms' ? 'filter-active' : '' %>">
+      <span class="filter-icon"><i class="fa-solid fa-bed"></i></span>
+      <span>Rooms</span>
+    </a>
+    <a href="/?search=city" class="filter <%= search === 'city' ? 'filter-active' : '' %>">
+      <span class="filter-icon"><i class="fa-solid fa-mountain-city"></i></span>
+      <span>Iconic Cities</span>
+    </a>
+    <a href="/?search=mountain" class="filter <%= search === 'mountain' ? 'filter-active' : '' %>">
+      <span class="filter-icon"><i class="fa-solid fa-mountain"></i></span>
+      <span>Mountains</span>
+    </a>
+    <a href="/?search=villa" class="filter <%= search === 'villa' ? 'filter-active' : '' %>">
+      <span class="filter-icon"><i class="fa-solid fa-house-chimney"></i></span>
+      <span>Villas</span>
+    </a>
+    <a href="/?search=beach" class="filter <%= search === 'beach' ? 'filter-active' : '' %>">
+      <span class="filter-icon"><i class="fa-solid fa-person-swimming"></i></span>
+      <span>Beachfront</span>
+    </a>
+    <a href="/?search=cabin" class="filter <%= search === 'cabin' ? 'filter-active' : '' %>">
+      <span class="filter-icon"><i class="fa-solid fa-campground"></i></span>
+      <span>Cabins</span>
+    </a>
+    <a href="/?search=lake" class="filter <%= search === 'lake' ? 'filter-active' : '' %>">
+      <span class="filter-icon"><i class="fa-solid fa-water"></i></span>
+      <span>Lakefront</span>
+    </a>
+    <a href="/?search=farmstay" class="filter <%= search === 'farmstay' ? 'filter-active' : '' %>">
+      <span class="filter-icon"><i class="fa-solid fa-tractor"></i></span>
+      <span>Nature Stays</span>
+    </a>
+    <a href="/?search=tropical" class="filter <%= search === 'tropical' ? 'filter-active' : '' %>">
+      <span class="filter-icon"><i class="fa-solid fa-umbrella-beach"></i></span>
+      <span>Tropical</span>
+    </a>
+  </div>
+</section>
+
+<% if (search) { %>
+  <div class="search-results-banner mb-4">
+    <div>
+      <span class="text-muted small">Search results</span>
+      <h5 class="fw-bold mb-0">Showing stays for "<span class="text-danger"><%= search %></span>"</h5>
+    </div>
+    <a href="/" class="btn btn-outline-dark rounded-pill px-3">
+      <i class="fa-solid fa-xmark me-1"></i> Clear
+    </a>
+  </div>
+<% } %>
+
+<% if (allListing.length === 0) { %>
+  <div class="empty-state text-center my-5 py-5">
+    <div class="empty-icon"><i class="fa-regular fa-compass"></i></div>
+    <h4 class="fw-bold mt-3">No stays found</h4>
+    <p class="text-muted mb-3">Try another destination, country, property name, or category.</p>
+    <a href="/" class="btn btn-dark rounded-pill px-4">Explore all stays</a>
+  </div>
+<% } else { %>
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4 mb-5" id="listingsGrid">
+    <% for(let listing of allListing) { %>
+      <div class="col listing-item">
+        <a href="/listings/<%= listing._id %>" class="listing-link">
+          <article class="listing-card h-100">
+            <div class="card-img-wrapper position-relative">
+              <img
+                src="<%= (listing.image && listing.image.url) ? listing.image.url : 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80' %>"
+                class="listing-img"
+                alt="<%= listing.title || 'Travel stay' %>"
+                loading="lazy"
+                onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80';"
+              />
+              <div class="image-shade"></div>
+              <span class="location-badge">
+                <i class="fa-solid fa-location-dot me-1"></i>
+                <%= listing.country || 'Destination' %>
+              </span>
+              <span class="view-badge">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              </span>
+            </div>
+
+            <div class="listing-content">
+              <div class="d-flex justify-content-between align-items-start gap-2">
+                <h3 class="listing-title"><%= listing.title || 'Beautiful stay' %></h3>
+                <span class="mini-icon"><i class="fa-regular fa-heart"></i></span>
+              </div>
+              <p class="listing-location">
+                <i class="fa-solid fa-location-dot me-1"></i>
+                <%= listing.location || 'Great destination' %><%= listing.country ? ', ' + listing.country : '' %>
+              </p>
+              <p class="listing-description">
+                <%= listing.description || 'A comfortable place to stay and explore the destination.' %>
+              </p>
+              <div class="listing-bottom">
+                <span class="price-text">&#8377; <%= listing.price ? listing.price.toLocaleString("en-IN") : "0" %> <small>/ night</small></span>
+                <span class="details-link">View details <i class="fa-solid fa-arrow-right ms-1"></i></span>
+              </div>
+            </div>
+          </article>
+        </a>
+      </div>
+    <% } %>
+  </div>
+<% } %>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const input = document.getElementById("heroSearchInput");
+    const clearBtn = document.getElementById("clearLiveSearch");
+    const form = document.getElementById("mainSearchForm");
+    let searchTimer;
+
+    if (input) {
+      input.addEventListener("keydown", (event) => {
+        if (/^[A-Z]$/.test(event.key)) {
+          event.preventDefault();
+          input.setRangeText(
+            event.key.toLowerCase(),
+            input.selectionStart,
+            input.selectionEnd,
+            "end"
+          );
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+      });
+
+      input.addEventListener("input", () => {
+        input.value = input.value.toLowerCase();
+        clearBtn.style.display = input.value.trim() ? "flex" : "none";
+
+        window.clearTimeout(searchTimer);
+        if (input.value.trim()) {
+          searchTimer = window.setTimeout(() => form.requestSubmit(), 700);
+        }
+      });
+    }
+
+    if (clearBtn) {
+      clearBtn.addEventListener("click", () => {
+        input.value = "";
+        clearBtn.style.display = "none";
+        input.focus();
+        window.location.href = "/";
+      });
+    }
+
+    if (form) {
+      form.addEventListener("submit", () => {
+        form.classList.add("is-searching");
+      });
+    }
+  });
+</script>

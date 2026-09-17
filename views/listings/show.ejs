@@ -1,0 +1,223 @@
+<% layout('layouts/boilerplate') -%>
+<div class="row mt-4 mb-5">
+  <div class="col-lg-9 mx-auto">
+    <div class="show-header mb-3">
+      <a href="/" class="back-link"><i class="fa-solid fa-arrow-left me-1"></i> Back to stays</a>
+    </div>
+
+    <div class="show-gallery mb-4">
+      <div class="show-main-image">
+        <img
+          src="<%= (listing.image && listing.image.url) ? listing.image.url : 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1400&q=80' %>"
+          alt="<%= listing.title || 'Travel stay' %>"
+          onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1400&q=80';"
+        />
+        <div class="show-image-label"><i class="fa-solid fa-camera me-1"></i> Listing photo</div>
+      </div>
+    </div>
+
+    <div class="show-card">
+      <div class="show-card-body">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+          <div>
+            <span class="eyebrow">Stay in <%= listing.country || 'a beautiful destination' %></span>
+            <h1 class="show-title mt-2 mb-2"><%= listing.title %></h1>
+            <p class="text-muted mb-0">
+              <i class="fa-solid fa-location-dot text-danger me-1"></i>
+              <%= listing.location || 'Destination' %><%= listing.country ? ', ' + listing.country : '' %>
+            </p>
+          </div>
+          <div class="show-price">
+            <strong>&#8377; <%= listing.price ? listing.price.toLocaleString("en-IN") : "0" %></strong>
+            <span>/ night</span>
+          </div>
+        </div>
+
+        <hr class="my-4"/>
+
+        <div class="host-box">
+          <div class="host-icon"><i class="fa-solid fa-user"></i></div>
+          <div>
+            <span class="text-muted small">Hosted by</span>
+            <div class="fw-bold"><%= (listing.owner && listing.owner.username) ? listing.owner.username : "Owner" %></div>
+          </div>
+        </div>
+
+        <div class="description-box mt-4">
+          <h5 class="fw-bold mb-2"><i class="fa-regular fa-file-lines me-2 text-danger"></i>About this stay</h5>
+          <p class="mb-0 text-secondary"><%= listing.description || "Enjoy a comfortable stay and explore the destination." %></p>
+        </div>
+      </div>
+    </div>
+
+    <% 
+      const isOwner = currUser && listing.owner && (
+        (listing.owner._id && listing.owner._id.equals(currUser._id)) || 
+        (listing.owner.equals && listing.owner.equals(currUser._id))
+      ); 
+    %>
+    <% if (isOwner) { %> 
+      <div class="btns d-flex gap-3 mb-4">
+        <a href="/listings/<%= listing._id %>/edit" class="btn btn-dark edit-btn px-4">
+          <i class="fa-solid fa-pen-to-square me-1"></i> Edit
+        </a>
+        <form method="POST" action="/listings/<%= listing._id %>?_method=DELETE" class="d-inline">
+          <button class="btn btn-danger px-4">
+            <i class="fa-solid fa-trash me-1"></i> Delete
+          </button>    
+        </form>
+      </div>
+      <hr/>
+    <% } %> 
+
+    <!-- Review Form -->
+    <div class="mb-4">
+      <% if (currUser) { %> 
+        <h4 class="fw-bold mb-3">Leave a Review</h4>
+        <form action="/listings/<%= listing.id %>/reviews" method="POST" novalidate class="needs-validation">
+          <div class="mb-3">
+            <label for="rating" class="form-label fw-semibold">Rating</label>
+            <fieldset class="starability-slot">
+              <input type="radio" id="no-rate" class="input-no-rate" name="review[rating]" value="1" checked aria-label="No rating." />
+              <input type="radio" id="first-rate1" name="review[rating]" value="1" />
+              <label for="first-rate1" title="Terrible">1 star</label>
+              <input type="radio" id="first-rate2" name="review[rating]" value="2" />
+              <label for="first-rate2" title="Not good">2 stars</label>
+              <input type="radio" id="first-rate3" name="review[rating]" value="3" />
+              <label for="first-rate3" title="Average">3 stars</label>
+              <input type="radio" id="first-rate4" name="review[rating]" value="4" />
+              <label for="first-rate4" title="Very good">4 stars</label>
+              <input type="radio" id="first-rate5" name="review[rating]" value="5" />
+              <label for="first-rate5" title="Amazing">5 stars</label>
+            </fieldset>
+          </div>
+
+          <div class="mb-3">
+            <label for="comment" class="form-label fw-semibold">Comment</label>
+            <textarea
+              name="review[comment]"
+              id="comment"
+              cols="30"
+              rows="4"
+              class="form-control"
+              placeholder="Share your experience staying here..."
+              required
+            ></textarea>
+            <div class="invalid-feedback">Please enter a comment for your review.</div>
+          </div>
+          <button class="btn btn-dark px-4">Submit Review</button>
+        </form>
+        <hr class="my-4"/>
+      <% } else { %>
+        <p class="text-muted"><a href="/login">Log in</a> to leave a review.</p>
+        <hr class="my-4"/>
+      <% } %>
+
+      <!-- All Reviews Display -->
+      <% if (listing.reviews && listing.reviews.length > 0) { %>
+        <h4 class="fw-bold mb-3">All Reviews (<%= listing.reviews.length %>)</h4>
+        <div class="row row-cols-1 row-cols-md-2 g-3">
+          <% for(let review of listing.reviews) { %>
+            <div class="col">
+              <div class="card h-100 p-3 shadow-sm rounded-3 border-0 bg-light">
+                <div class="card-body p-0"> 
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="card-title fw-bold mb-0">
+                      <i class="fa-regular fa-user me-1 text-secondary"></i>
+                      @<%= (review.author && review.author.username) ? review.author.username : "Guest" %>
+                    </h6>
+                  </div>
+                  <p class="starability-result card-text mb-2" data-rating="<%= review.rating %>"></p>
+                  <p class="card-text text-secondary mb-2"><%= review.comment %></p>
+                  <% 
+                    const isReviewAuthor = currUser && review.author && (
+                      (review.author._id && review.author._id.equals(currUser._id)) || 
+                      (review.author.equals && review.author.equals(currUser._id))
+                    ); 
+                  %>
+                  <% if (isReviewAuthor) { %>
+                    <form action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE" method="POST">
+                      <button class="btn btn-sm btn-outline-danger">
+                        <i class="fa-solid fa-trash-can me-1"></i> Delete
+                      </button>
+                    </form>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          <% } %>
+        </div>
+        <hr class="my-4"/>
+      <% } %>
+
+      <!-- Map Section (Visible to all visitors) -->
+      <h4 class="fw-bold mb-3">Where you'll be</h4>
+      <p class="text-muted mb-2">
+        <i class="fa-solid fa-location-dot text-danger me-1"></i> <%= listing.location %>, <%= listing.country %>
+      </p>
+      <div id="map-wrapper" class="mb-3">
+        <div 
+          id="map" 
+          data-coordinates="<%- JSON.stringify((listing && listing.geometry && listing.geometry.coordinates && listing.geometry.coordinates.length > 0) ? listing.geometry.coordinates : [77.2090, 28.6139]) %>"
+        ></div>
+      </div>
+
+      <% 
+        let placeName = encodeURIComponent((listing.title || "Destination") + ", " + (listing.location || "Unknown location") + ", " + (listing.country || "India"));
+        let googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=current+location&destination=${placeName}&travelmode=driving`;
+      %>
+      <div class="mb-4">
+        <a
+          href="<%= googleMapsUrl %>"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn btn-outline-danger rounded-pill px-4"
+        >
+          <i class="fa-solid fa-diamond-turn-right me-1"></i> Get Directions on Google Maps
+        </a>
+      </div>
+
+      <% if (relatedListings && relatedListings.length > 0) { %>
+        <section class="related-section mt-5 pt-4 border-top">
+          <div class="d-flex justify-content-between align-items-end mb-3">
+            <div>
+              <span class="eyebrow">More to explore</span>
+              <h4 class="fw-bold mb-0 mt-1">You may also like</h4>
+            </div>
+            <a href="/" class="small text-dark text-decoration-none fw-semibold">View all <i class="fa-solid fa-arrow-right ms-1"></i></a>
+          </div>
+
+          <div class="row row-cols-1 row-cols-md-3 g-4">
+            <% for (let item of relatedListings) { %>
+              <div class="col">
+                <a href="/listings/<%= item._id %>" class="listing-link">
+                  <article class="listing-card h-100">
+                    <div class="card-img-wrapper position-relative">
+                      <img
+                        src="<%= (item.image && item.image.url) ? item.image.url : 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1000&q=80' %>"
+                        class="listing-img related-img"
+                        alt="<%= item.title || 'Travel stay' %>"
+                        loading="lazy"
+                        onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1000&q=80';"
+                      />
+                    </div>
+                    <div class="listing-content px-0">
+                      <h3 class="listing-title"><%= item.title || 'Beautiful stay' %></h3>
+                      <p class="listing-location mb-1">
+                        <i class="fa-solid fa-location-dot me-1"></i>
+                        <%= item.location || 'Destination' %>
+                      </p>
+                      <span class="price-text">&#8377; <%= item.price ? item.price.toLocaleString("en-IN") : "0" %> <small>/ night</small></span>
+                    </div>
+                  </article>
+                </a>
+              </div>
+            <% } %>
+          </div>
+        </section>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<script src="/js/map.js" defer></script>
