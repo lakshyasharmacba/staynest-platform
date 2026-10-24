@@ -1,0 +1,377 @@
+{
+  "info": {
+    "name": "Wanderlust API v2.0",
+    "description": "Complete collection of 33 REST API requests for Wanderlust Stay Booking Platform including Auth, Listings, Reviews, Wishlist, Bookings, Payments, and Admin Moderation.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api" },
+    { "key": "listingId", "value": "" },
+    { "key": "bookingId", "value": "" },
+    { "key": "reviewId", "value": "" },
+    { "key": "userId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"phone\": \"9876543211\",\n  \"password\": \"Secret123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/signup"
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/verify-otp"
+          }
+        },
+        {
+          "name": "Resend OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"purpose\": \"signup\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/resend-otp"
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"host@wanderlust.local\",\n  \"password\": \"Host12345\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Google OAuth Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"credential\": \"google_id_token_jwt_here\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/google"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/logout"
+          }
+        },
+        {
+          "name": "Get Current User (Me)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+        {
+          "name": "Update Phone",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"9876543212\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/forgot-password"
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"NewSecret123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/reset-password"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Listings",
+      "item": [
+        {
+          "name": "Get All Listings (with search & filters)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/listings?search=goa&category=Beach&minPrice=1000&maxPrice=10000&sort=newest&page=1&limit=12"
+          }
+        },
+        {
+          "name": "Get Host Own Listings",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/listings/mine"
+          }
+        },
+        {
+          "name": "Get Single Listing Details",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/listings/{{listingId}}"
+          }
+        },
+        {
+          "name": "Create Listing (Multipart)",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title", "value": "Luxury Villa in Goa", "type": "text" },
+                { "key": "description", "value": "Private beach view pool villa", "type": "text" },
+                { "key": "price", "value": "4500", "type": "text" },
+                { "key": "location", "value": "Candolim", "type": "text" },
+                { "key": "country", "value": "India", "type": "text" },
+                { "key": "category", "value": "Beach", "type": "text" },
+                { "key": "maxGuests", "value": "6", "type": "text" },
+                { "key": "image", "type": "file", "src": "" }
+              ]
+            },
+            "url": "{{baseUrl}}/listings"
+          }
+        },
+        {
+          "name": "Update Listing",
+          "request": {
+            "method": "PUT",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title", "value": "Luxury Beachside Villa Goa", "type": "text" },
+                { "key": "price", "value": "5000", "type": "text" }
+              ]
+            },
+            "url": "{{baseUrl}}/listings/{{listingId}}"
+          }
+        },
+        {
+          "name": "Delete Listing",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/listings/{{listingId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Reviews",
+      "item": [
+        {
+          "name": "Add Review (After completed stay)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Amazing place and wonderful hospitality!\"\n}"
+            },
+            "url": "{{baseUrl}}/listings/{{listingId}}/reviews"
+          }
+        },
+        {
+          "name": "Delete Own Review",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/reviews/{{reviewId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Wishlist",
+      "item": [
+        {
+          "name": "Get Wishlist",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/wishlist"
+          }
+        },
+        {
+          "name": "Add to Wishlist",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/wishlist/{{listingId}}"
+          }
+        },
+        {
+          "name": "Remove from Wishlist",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/wishlist/{{listingId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Bookings",
+      "item": [
+        {
+          "name": "Create Pending Booking + Razorpay Order",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"checkIn\": \"2026-11-01\",\n  \"checkOut\": \"2026-11-05\",\n  \"guests\": 2\n}"
+            },
+            "url": "{{baseUrl}}/listings/{{listingId}}/bookings"
+          }
+        },
+        {
+          "name": "Get Guest Bookings (Mine)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/bookings/mine"
+          }
+        },
+        {
+          "name": "Get Host Confirmed Bookings & Revenue",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/bookings/host"
+          }
+        },
+        {
+          "name": "Cancel Booking (Auto Refund)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/bookings/{{bookingId}}/cancel"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Payments",
+      "item": [
+        {
+          "name": "Verify Payment Signature",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"razorpay_order_id\": \"order_xxx\",\n  \"razorpay_payment_id\": \"pay_xxx\",\n  \"razorpay_signature\": \"sig_xxx\"\n}"
+            },
+            "url": "{{baseUrl}}/payments/verify"
+          }
+        },
+        {
+          "name": "Razorpay Webhook (Raw bytes)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-razorpay-signature", "value": "webhook_sig_xxx" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"payment.captured\",\n  \"payload\": {\n    \"payment\": {\n      \"entity\": {\n        \"id\": \"pay_xxx\",\n        \"order_id\": \"order_xxx\"\n      }\n    }\n  }\n}"
+            },
+            "url": "{{baseUrl}}/payments/webhook"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Admin Moderation",
+      "item": [
+        {
+          "name": "Admin Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/stats"
+          }
+        },
+        {
+          "name": "Get Users (with search & pagination)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/users?search=&page=1"
+          }
+        },
+        {
+          "name": "Block or Unblock User",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"blocked\": true\n}"
+            },
+            "url": "{{baseUrl}}/admin/users/{{userId}}/block"
+          }
+        },
+        {
+          "name": "Get All Listings for Moderation",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/listings?search=&page=1"
+          }
+        },
+        {
+          "name": "Admin Delete Listing (Safe Delete)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/admin/listings/{{listingId}}"
+          }
+        },
+        {
+          "name": "Get All Bookings (with status filter)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/bookings?status=confirmed&page=1"
+          }
+        },
+        {
+          "name": "Get Admin Audit Logs",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/logs?page=1"
+          }
+        }
+      ]
+    }
+  ]
+}

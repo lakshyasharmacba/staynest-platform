@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .input { @apply w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-brand focus:ring-1 focus:ring-brand; }
+  .btn { @apply w-full rounded-lg bg-brand py-2 font-semibold text-white hover:opacity-90 disabled:opacity-50; }
+  .card { @apply mx-auto mt-10 w-full max-w-md rounded-2xl border bg-white p-6 shadow-sm; }
+}

@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+Client/node_modules/
+Server/node_modules/
+
+# Environment variables (Crucial for security)
+.env
+Client/.env
+Server/.env
+*.env.local
+
+# Build output
+Client/dist/
+dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
