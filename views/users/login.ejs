@@ -1,0 +1,80 @@
+<% layout('layouts/boilerplate') %>
+
+<div class="container mt-3 mb-4 auth-page">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+
+            <div class="card form-card auth-card shadow border-0 rounded-4 p-3 p-md-4">
+
+                <div class="card-body p-0">
+
+                    <div class="text-center mb-4">
+                        <div class="auth-icon-circle mx-auto mb-3">
+                            <i class="fa-solid fa-arrow-right-to-bracket text-danger fs-3"></i>
+                        </div>
+                        <h2 class="auth-title fw-bold text-dark">Welcome Back</h2>
+                        <p class="text-muted small">Log in to manage your stays and bookings</p>
+                    </div>
+
+                    <form action="/login" method="POST" class="needs-validation" novalidate>
+
+                        <div class="mb-3">
+                            <label for="username" class="form-label fw-semibold">
+                                <i class="fa-regular fa-user me-1 text-muted"></i> Username
+                            </label>
+
+                            <input
+                                type="text"
+                                id="username"
+                                name="username"
+                                class="form-control form-control-lg rounded-3"
+                                placeholder="Enter your username"
+                                required
+                            />
+
+                            <div class="invalid-feedback">
+                                Please enter your username.
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="password" class="form-label fw-semibold">
+                                <i class="fa-solid fa-lock me-1 text-muted"></i> Password
+                            </label>
+
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                class="form-control form-control-lg rounded-3"
+                                placeholder="Enter your password"
+                                required
+                            />
+
+                            <div class="invalid-feedback">
+                                Please enter your password.
+                            </div>
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            class="btn btn-danger btn-lg w-100 rounded-3 fw-semibold add-btn shadow-sm py-2">
+                            Log In
+                        </button>
+
+                    </form>
+
+                    <p class="text-center mt-4 mb-0 text-muted small">
+                        Don't have an account?
+                        <a href="/signup" class="text-danger fw-semibold text-decoration-none ms-1">
+                            Sign Up
+                        </a>
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
