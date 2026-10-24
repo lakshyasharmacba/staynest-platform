@@ -54,12 +54,3 @@ npm run dev              # http://localhost:8080
 ```bash
 npm run make-admin -- someone@example.com
 ```
-
-## Interview me kya bolna hai (short)
-- **OTP**: `crypto.randomInt` (secure), DB me HMAC-SHA256 hash, 10 min expiry (TTL index), 5 attempts, 60s resend gap, ek baar use.
-- **Auth & RBAC**: bcrypt hash, JWT httpOnly cookie (XSS safe), email verify bina login nahi. User & Admin roles, `isAdmin` middleware, user block/unblock check on every request.
-- **Payment**: amount server calculate karta hai, HMAC signature verify, webhook backup, idempotent confirm.
-- **Double booking**: `newIn < oldOut && newOut > oldIn` + 15 min hold (pending) + auto expire.
-- **Email Receipts**: Nodemailer se confirm & cancel receipts to both guest and host. Fail-safe (email error never breaks booking flow).
-- **Admin Moderation & Audit**: Safe delete (no deletion if active confirmed bookings exist), AuditLog collection stores who did what action and when.
-- **Security**: Joi validation, rate limit, helmet, CORS credentials, regex escape in search, HTML escape in emails.
