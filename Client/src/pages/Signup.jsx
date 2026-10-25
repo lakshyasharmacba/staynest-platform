@@ -35,12 +35,15 @@ export default function Signup() {
       <input className="input" type="password" name="password" placeholder="Password" value={form.password} onChange={handleChange} required />
       <button className="btn" disabled={loading}>{loading ? "Sending OTP..." : "Sign up"}</button>
       
-      <div className="relative my-2 text-center">
-        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200"></div></div>
-        <span className="relative bg-white px-2 text-xs uppercase text-gray-400">or</span>
-      </div>
-
-      <GoogleAuthButton onError={setError} />
+      {import.meta.env.VITE_GOOGLE_CLIENT_ID && (
+        <>
+          <div className="relative my-2 text-center">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200"></div></div>
+            <span className="relative bg-white px-2 text-xs uppercase text-gray-400">or</span>
+          </div>
+          <GoogleAuthButton onError={setError} />
+        </>
+      )}
 
       <p className="text-center text-sm pt-2">Already have an account? <Link to="/login" className="font-semibold text-brand">Login</Link></p>
     </form>

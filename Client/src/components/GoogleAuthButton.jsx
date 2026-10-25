@@ -4,6 +4,9 @@ import api, { getError } from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 
 export default function GoogleAuthButton({ onError }) {
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
+  if (!googleClientId) return null;
+
   const { setUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
