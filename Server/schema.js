@@ -22,19 +22,28 @@ module.exports = {
     phone: phone.required(),
     password: password.required(),
   }),
-  login: Joi.object({ email, password: Joi.string().required() }),
+  login: Joi.object({
+    email: Joi.string().trim().min(3).max(100).required().messages({
+      "string.empty": "Email or Username is required",
+    }),
+    password: Joi.string().required(),
+  }),
   verifyOtp: Joi.object({ email, otp }),
   resendOtp: Joi.object({ email, purpose: Joi.string().valid("signup", "reset").required() }),
   forgot: Joi.object({ email }),
   reset: Joi.object({ email, otp, newPassword: password.required() }),
-  profile: Joi.object({ phone: phone.required() }),
-
+  profile: Joi.object({
+    username: Joi.string().trim().pattern(/^[a-zA-Z0-9_]+$/).min(3).max(30).messages({
+      "string.pattern.base": "Username can only contain letters, numbers and underscore (_)",
+    }),
+    phone,
+  }).or("username", "phone"),
   listing: Joi.object({
-    title: Joi.string().trim().required(),
-    description: Joi.string().trim().required(),
-    location: Joi.string().trim().required(),
-    country: Joi.string().trim().required(),
-    price: Joi.number().min(0).required(),
+    title: Joi.string().trim().max(100).required(),
+    description: Joi.string().trim().max(2000).required(),
+    location: Joi.string().trim().max(100).required(),
+    country: Joi.string().trim().max(100).required(),
+    price: Joi.number().min(1).required(),
     maxGuests: Joi.number().integer().min(1).max(20).default(2),
     category: Joi.string().valid(...CATEGORIES).default("Rooms"),
   }),

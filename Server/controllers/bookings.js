@@ -8,11 +8,25 @@ const DAY = 24 * 60 * 60 * 1000;
 const HOLD_MS = 15 * 60 * 1000; // payment ke liye 15 min
 const toUtcDay = (d) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 
+// Ye dates kisi aur booking se takra rahi hain? (confirmed ya chalti hui pending hold)
+// overlap rule: newIn < oldOut  AND  newOut > oldIn
+const findClash = (listingId, checkIn, checkOut, excludeBookingId) =>
+  Booking.exists({
+    ...(excludeBookingId ? { _id: { $ne: excludeBookingId } } : {}),
+    listing: listingId,
+    checkIn: { $lt: checkOut },
+    checkOut: { $gt: checkIn },
+    $or: [{ status: "confirmed" }, { status: "pending", holdExpiresAt: { $gt: new Date() } }],
+  });
+
 module.exports.create = async (req, res) => {
   const { listingId } = req.params;
   const checkIn = toUtcDay(req.body.checkIn);
   const checkOut = toUtcDay(req.body.checkOut);
   const { guests } = req.body;
+
+  // Google se aaye user ka phone nahi hota; host ko contact dene ke liye number zaroori hai
+  if (!req.user.phone) throw new ExpressError(400, "Please add your mobile number in Profile before booking");
 
   if (checkIn < toUtcDay(new Date())) throw new ExpressError(400, "Check-in date cannot be in the past");
   if (checkOut <= checkIn) throw new ExpressError(400, "Check-out must be after check-in");
@@ -24,14 +38,15 @@ module.exports.create = async (req, res) => {
   if (listing.owner.equals(req.user._id)) throw new ExpressError(400, "You cannot book your own listing");
   if (guests > listing.maxGuests) throw new ExpressError(400, `This place allows maximum ${listing.maxGuests} guests`);
 
-  // DOUBLE BOOKING CHECK: do date ranges overlap  <=>  newIn < oldOut  AND  newOut > oldIn
-  const clash = await Booking.exists({
-    listing: listing._id,
-    checkIn: { $lt: checkOut },
-    checkOut: { $gt: checkIn },
-    $or: [{ status: "confirmed" }, { status: "pending", holdExpiresAt: { $gt: new Date() } }],
-  });
-  if (clash) throw new ExpressError(409, "These dates are not available");
+  // User ne pehle popup band kar diya tha? Uski apni purani pending hold hata do,
+  // warna dobara try karne pe "dates not available" aata (apni hi hold se).
+  await Booking.updateMany(
+    { listing: listing._id, guest: req.user._id, status: "pending" },
+    { status: "expired" }
+  );
+
+  // 1st check: dates free hain?
+  if (await findClash(listing._id, checkIn, checkOut)) throw new ExpressError(409, "These dates are not available");
 
   const totalAmount = nights * listing.price; // amount hamesha server calculate karta hai
   if (totalAmount < 1) throw new ExpressError(400, "Invalid booking amount");
@@ -46,6 +61,13 @@ module.exports.create = async (req, res) => {
     totalAmount,
     holdExpiresAt: new Date(Date.now() + HOLD_MS),
   });
+
+  // 2nd check (race condition se bachav): do log ek saath check pass kar gaye ho sakte hain.
+  // Insert ke BAAD dobara dekho ki mere alawa koi aur booking to nahi. Jo bhi baad me check karega use dusri booking dikhegi.
+  if (await findClash(listing._id, checkIn, checkOut, booking._id)) {
+    await booking.deleteOne();
+    throw new ExpressError(409, "Someone else is booking these dates right now. Please try again.");
+  }
 
   let order;
   try {

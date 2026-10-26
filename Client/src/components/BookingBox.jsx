@@ -26,6 +26,7 @@ export default function BookingBox({ listing, isOwner }) {
   const handleReserve = async () => {
     if (!user) return navigate("/login", { state: { from: location.pathname } });
     setError("");
+    if (!user.phone) return setError("A mobile number is required to book. Add it in your Profile (click your name at the top).");
     if (nights < 1) return setError("Please select check-in and check-out dates");
 
     setLoading(true);

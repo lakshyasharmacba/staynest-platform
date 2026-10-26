@@ -1,56 +1,24 @@
-# Wanderlust Server (Phase 1) - REST API
+# Wanderlust: Stay Booking Platform
 
-Express 5 + MongoDB (Mongoose) + JWT (httpOnly cookie) + Nodemailer OTP + Razorpay (TEST mode)
+Airbnb-style full-stack project. React 18 + Vite + Tailwind | Node + Express 5 | MongoDB | Razorpay (TEST) | Cloudinary | Nodemailer
 
-## Setup
-```
-npm install
-cp .env.example .env     # fill values
-npm run seed             # demo listings (host@wanderlust.local / Host12345)
-npm run dev              # http://localhost:8080
-```
+## Features
+Email OTP signup/login (+ optional Google Sign-In), forgot password, listings CRUD with image upload,
+search/filter/pagination, map, date booking with double-booking protection, Razorpay test payment + webhook,
+cancel + refund, reviews after stay, wishlist, host dashboard, admin panel (block users, moderation, audit log), email receipts.
 
-### Gmail App Password (OTP email ke liye)
-1. Google Account -> Security -> **2-Step Verification ON**
-2. Security -> **App passwords** -> naya password banao
-3. 16-letter password `EMAIL_PASS` me daalo (normal Gmail password nahi chalega)
-
-### Razorpay TEST
-- Dashboard -> **Test Mode** -> Settings -> API Keys -> `rzp_test_...` key + secret
-- Test card: `4111 1111 1111 1111`, any future expiry, any CVV, OTP: `1234` / "Success"
-- Webhook (optional): ngrok URL + `/api/payments/webhook`, events `payment.captured`, `order.paid`, secret -> `RAZORPAY_WEBHOOK_SECRET`
-
-## API
-| Method | URL | Auth | Kaam |
-|---|---|---|---|
-| POST | /api/auth/signup | - | username, email, phone, password -> OTP email |
-| POST | /api/auth/verify-otp | - | email + 6 digit OTP -> account verified + login |
-| POST | /api/auth/resend-otp | - | {email, purpose: signup/reset} (60s gap) |
-| POST | /api/auth/login | - | email + password (unverified ho to OTP dobara) |
-| POST | /api/auth/logout | - | cookie clear |
-| GET/PATCH | /api/auth/me | yes | profile / phone update |
-| POST | /api/auth/forgot-password | - | OTP email |
-| POST | /api/auth/reset-password | - | email + OTP + newPassword |
-| GET | /api/listings | - | ?search&category&minPrice&maxPrice&sort&page&limit |
-| GET | /api/listings/:id | - | listing + reviews |
-| POST/PUT/DELETE | /api/listings(/:id) | yes (owner) | multipart form, image field = `image` |
-| POST | /api/listings/:id/reviews | yes | sirf stay complete hone ke baad |
-| DELETE | /api/reviews/:id | yes | sirf apna review |
-| POST | /api/listings/:id/bookings | yes | dates + guests -> Razorpay order |
-| POST | /api/payments/verify | yes | signature verify -> booking confirmed |
-| POST | /api/payments/webhook | Razorpay | backup confirmation (raw body) |
-| GET | /api/bookings/mine | yes | meri bookings (confirmed pe host phone) |
-| GET | /api/bookings/host | yes | meri listings ki confirmed bookings + revenue |
-| PATCH | /api/bookings/:id/cancel | yes | 2+ din pehle = full refund |
-| GET | /api/admin/stats | Admin | total users, blocked, listings, revenue, bookings |
-| GET | /api/admin/users | Admin | user list + search + pagination |
-| PATCH | /api/admin/users/:id/block | Admin | user block/unblock (audit logged) |
-| GET | /api/admin/listings | Admin | all listings moderation |
-| DELETE | /api/admin/listings/:id | Admin | admin delete listing (safe delete) |
-| GET | /api/admin/bookings | Admin | all bookings with status filter |
-| GET | /api/admin/logs | Admin | audit log history |
-
-## Make Admin CLI
+## Run locally
 ```bash
-npm run make-admin -- someone@example.com
+cd Server && npm install && cp .env.example .env   # .env me apni keys bharo (kabhi commit mat karo)
+npm run seed && npm run dev                        # http://localhost:8080
+cd ../Client && npm install && npm run dev         # http://localhost:5173
 ```
+Demo (after seed): host@wanderlust.local / Host12345, admin@wanderlust.local / Admin12345
+Razorpay test card: 4111 1111 1111 1111, any future expiry, any CVV, OTP 1234
+
+## Deploy
+Atlas (DB) + Render (Server) + Vercel (Client). `Client/vercel.json` me apna Render URL daalo.
+Render free pe Gmail SMTP block hota hai, isliye SMTP_HOST/SMTP_PORT (port 2525) wala provider use karo.
+
+## Make admin
+`npm run make-admin -- someone@example.com`

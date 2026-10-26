@@ -21,9 +21,12 @@ const SORTS = {
 };
 
 module.exports.index = async (req, res) => {
-  const { search, category, minPrice, maxPrice, sort = "newest" } = req.query;
+  const { category, minPrice, maxPrice, sort = "newest" } = req.query;
+  const search = typeof req.query.search === "string" ? req.query.search : "";
+
+  // FIX: `page` pehle define hi nahi tha -> ReferenceError -> 500 -> "We couldn't load the stays"
   const page = Math.max(parseInt(req.query.page) || 1, 1);
-  const limit = Math.min(parseInt(req.query.limit) || 12, 24);
+  const limit = Math.min(Math.max(parseInt(req.query.limit) || 12, 1), 24);
 
   const filter = {};
   if (search && search.trim()) {
@@ -31,10 +34,13 @@ module.exports.index = async (req, res) => {
     filter.$or = [{ title: rx }, { location: rx }, { country: rx }, { description: rx }];
   }
   if (category) filter.category = category;
-  if (minPrice || maxPrice) {
+
+  const min = Number(minPrice);
+  const max = Number(maxPrice);
+  if ((minPrice && !Number.isNaN(min)) || (maxPrice && !Number.isNaN(max))) {
     filter.price = {};
-    if (minPrice) filter.price.$gte = Number(minPrice);
-    if (maxPrice) filter.price.$lte = Number(maxPrice);
+    if (minPrice && !Number.isNaN(min)) filter.price.$gte = min;
+    if (maxPrice && !Number.isNaN(max)) filter.price.$lte = max;
   }
 
   const [listings, total] = await Promise.all([

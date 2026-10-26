@@ -14,6 +14,30 @@ const COORDS = {
   Jaipur: [75.7873, 26.9124], Goa: [74.124, 15.2993],
 };
 
+// Har listing ko sahi category (warna sab "Rooms" ban jati hain aur Beach/Mountains tab khali dikhte hain)
+const CATEGORY_BY_TITLE = {
+  "Cozy Beachfront Cottage": "Beach",
+  "Modern Loft in Downtown": "Rooms",
+  "Peaceful Mountain Alpine Cabin": "Mountains",
+  "Historic Tuscan Villa": "Farms",
+  "Secluded Rainforest Treehouse": "Camping",
+  "Luxury Beachfront Resort Villa": "Luxury",
+  "Rustic Lakefront Lodge": "Mountains",
+  "Luxury Penthouse with City Views": "City",
+  "Ski Chalet in the Swiss Alps": "Mountains",
+  "Safari Lodge in the Serengeti": "Camping",
+  "Historic Canal House": "City",
+  "Overwater Villa in the Maldives": "Beach",
+  "Royal Heritage Haveli": "Trending",
+  "Serene Tropical Villa in Goa": "Beach",
+};
+
+// Seed me demo admin (Admin12345) banta hai -> production DB pe chalna khatarnak hai
+if (process.env.NODE_ENV === "production") {
+  console.error("Seed production me allowed nahi hai (demo admin password sabko pata hai).");
+  process.exit(1);
+}
+
 (async () => {
   await mongoose.connect(process.env.MONGO_URL || "mongodb://127.0.0.1:27017/wanderlust");
 
@@ -43,11 +67,13 @@ const COORDS = {
     });
   }
 
-  await Listing.deleteMany({});
+  // PEHLE: Listing.deleteMany({}) -> sabki listings ud jati thi. Ab sirf demo host ki purani listings hatengi.
+  await Listing.deleteMany({ owner: host._id });
   const docs = initData.data.map((l) => ({
     ...l,
     owner: host._id,
     maxGuests: 4,
+    category: CATEGORY_BY_TITLE[l.title] || "Rooms",
     geometry: { type: "Point", coordinates: COORDS[l.location] || [77.209, 28.6139] },
   }));
   await Listing.insertMany(docs);

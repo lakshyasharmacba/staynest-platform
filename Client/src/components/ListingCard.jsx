@@ -1,12 +1,18 @@
 import { Link } from "react-router-dom";
 import { formatPrice } from "../utils";
 import HeartButton from "./HeartButton";
+import ImageWithFallback from "./ImageWithFallback";
 
 export default function ListingCard({ listing }) {
   return (
     <div className="relative">
       <Link to={`/listings/${listing._id}`} className="block overflow-hidden rounded-2xl bg-white shadow-sm transition hover:shadow-md">
-        <img src={listing.image?.url} alt={listing.title} className="h-48 w-full object-cover" loading="lazy" />
+        <ImageWithFallback
+          src={listing.image?.url}
+          alt={listing.title}
+          className="h-48 w-full object-cover"
+          width={600}
+        />
         <div className="p-3">
           <div className="flex items-start justify-between gap-2">
             <h3 className="truncate font-semibold">{listing.title}</h3>

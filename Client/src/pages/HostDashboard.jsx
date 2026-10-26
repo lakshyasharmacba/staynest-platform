@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api, { getError } from "../api/axios";
 import { formatDate, formatPrice } from "../utils";
+import ImageWithFallback from "../components/ImageWithFallback";
 
 export default function HostDashboard() {
   const [listings, setListings] = useState(null);
@@ -64,7 +65,14 @@ export default function HostDashboard() {
         <div className="space-y-3">
           {listings?.map((l) => (
             <div key={l._id} className="flex items-center gap-4 rounded-2xl border bg-white p-3">
-              <img src={l.image?.url} alt="" className="h-20 w-28 shrink-0 rounded-xl object-cover" />
+              <div className="h-20 w-28 shrink-0 overflow-hidden rounded-xl">
+                <ImageWithFallback
+                  src={l.image?.url}
+                  alt={l.title}
+                  className="h-20 w-28 object-cover"
+                  width={300}
+                />
+              </div>
               <div className="min-w-0 flex-1">
                 <Link to={`/listings/${l._id}`} className="block truncate font-semibold hover:underline">{l.title}</Link>
                 <p className="text-sm text-gray-500">{l.location}, {l.country} · {formatPrice(l.price)}/night</p>

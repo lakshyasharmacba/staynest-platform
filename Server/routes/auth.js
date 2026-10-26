@@ -23,6 +23,7 @@ router.post("/logout", c.logout);
 router.get("/me", requireAuth, c.me);
 router.patch("/me", requireAuth, validate(schemas.profile), c.updateProfile);
 router.post("/forgot-password", limiter, validate(schemas.forgot), c.forgotPassword);
+router.post("/verify-reset-otp", limiter, validate(schemas.verifyOtp), c.verifyResetOtp);
 router.post("/reset-password", limiter, validate(schemas.reset), c.resetPassword);
 
 module.exports = router;

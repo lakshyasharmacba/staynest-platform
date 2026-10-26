@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import StarRating from "../components/StarRating";
 import ListingMap from "../components/ListingMap";
 import BookingBox from "../components/BookingBox";
+import ImageWithFallback from "../components/ImageWithFallback";
 import { formatDate } from "../utils";
 
 export default function ListingDetail() {
@@ -65,7 +66,14 @@ export default function ListingDetail() {
         {listing.reviewCount > 0 && <> · ★ {listing.avgRating} ({listing.reviewCount} reviews)</>}
       </p>
 
-      <img src={listing.image?.url} alt={listing.title} className="mt-4 h-80 w-full rounded-2xl object-cover" />
+      <div className="mt-4 overflow-hidden rounded-2xl">
+        <ImageWithFallback
+          src={listing.image?.url}
+          alt={listing.title}
+          className="h-80 w-full object-cover"
+          width={1200}
+        />
+      </div>
 
       <div className="mt-6 grid gap-8 md:grid-cols-3">
         <div className="md:col-span-2">

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import api, { getError } from "../api/axios";
 import { formatDate, formatPrice } from "../utils";
+import ImageWithFallback from "../components/ImageWithFallback";
 
 const BADGE = {
   confirmed: "bg-green-100 text-green-700",
@@ -62,7 +63,14 @@ export default function MyBookings() {
           const host = b.listing?.owner;
           return (
             <div key={b._id} className="flex gap-4 rounded-2xl border bg-white p-3">
-              <img src={b.listing?.image?.url} alt="" className="h-28 w-32 shrink-0 rounded-xl object-cover" />
+              <div className="h-28 w-32 shrink-0 overflow-hidden rounded-xl">
+                <ImageWithFallback
+                  src={b.listing?.image?.url}
+                  alt={b.listing?.title || "Listing"}
+                  className="h-28 w-32 object-cover"
+                  width={300}
+                />
+              </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
                   <Link to={`/listings/${b.listing?._id}`} className="truncate font-semibold hover:underline">{b.listing?.title}</Link>
