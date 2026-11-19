@@ -38,6 +38,15 @@ module.exports = {
     }),
     phone,
   }).or("username", "phone"),
+  requestEmailChange: Joi.object({
+    newEmail: email,                    // existing email helper use kar rahe
+  }),
+  verifyEmailChange: Joi.object({
+    newEmail: email,
+    otp,
+    username: Joi.string().trim().pattern(/^[a-zA-Z0-9_]+$/).min(3).max(30),
+    phone: phone,
+  }),
   listing: Joi.object({
     title: Joi.string().trim().max(100).required(),
     description: Joi.string().trim().max(2000).required(),

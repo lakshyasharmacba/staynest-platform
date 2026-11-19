@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import api, { getError } from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 
-// Ye rules backend (Server/schema.js) ke rules jaise hi hain
 const USERNAME_RE = /^[a-zA-Z0-9_]+$/;
 const PHONE_RE = /^[6-9]\d{9}$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const PencilIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
@@ -12,7 +12,6 @@ const PencilIcon = () => (
   </svg>
 );
 
-// Edit mode me nahi hain to field locked (grey) dikhta hai
 const lockedClass = "disabled:cursor-not-allowed disabled:border-gray-300 disabled:bg-gray-50 disabled:text-gray-800";
 
 export default function Profile() {
@@ -20,46 +19,73 @@ export default function Profile() {
 
   const savedPhone = user.phone || "";
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ username: user.username, phone: savedPhone });
+  const [form, setForm] = useState({
+    username: user.username,
+    phone: savedPhone,
+    email: user.email,
+  });
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Email change OTP flow
+  const [otpStep, setOtpStep] = useState(false);   // true = OTP input dikhao
+  const [otp, setOtp] = useState("");
+  const [pendingEmail, setPendingEmail] = useState("");
+
   const usernameRef = useRef(null);
 
-  // Edit dabate hi pehla field active ho jaye
   useEffect(() => {
-    if (editing) usernameRef.current?.focus();
-  }, [editing]);
+    if (editing && !otpStep) usernameRef.current?.focus();
+  }, [editing, otpStep]);
 
+  // ---------- Validation ----------
   const username = form.username.trim();
-
   let usernameError = "";
   if (!username) usernameError = "Username is required.";
-  else if (!USERNAME_RE.test(username)) usernameError = "Use only letters, numbers and underscore (_). No spaces or symbols.";
+  else if (!USERNAME_RE.test(username)) usernameError = "Use only letters, numbers and underscore (_).";
   else if (username.length < 3 || username.length > 30) usernameError = "Username must be 3 to 30 characters.";
 
   let phoneError = "";
   if (!form.phone && savedPhone) phoneError = "Mobile number cannot be empty.";
-  else if (form.phone && !PHONE_RE.test(form.phone)) phoneError = "Enter a valid 10-digit number starting with 6, 7, 8 or 9.";
+  else if (form.phone && !PHONE_RE.test(form.phone)) phoneError = "Enter a valid 10-digit number starting with 6-9.";
+
+  const email = form.email.trim().toLowerCase();
+  let emailError = "";
+  if (!email) emailError = "Email is required.";
+  else if (!EMAIL_RE.test(email)) emailError = "Enter a valid email address.";
 
   const usernameChanged = username !== user.username;
   const phoneChanged = form.phone !== savedPhone;
-  const canSave = editing && !saving && (usernameChanged || phoneChanged) && !usernameError && !phoneError;
+  const emailChanged = email !== user.email;
 
+  const canSave =
+    editing &&
+    !saving &&
+    (usernameChanged || phoneChanged || emailChanged) &&
+    !usernameError &&
+    !phoneError &&
+    !emailError;
+
+  // ---------- Handlers ----------
   const startEdit = () => {
-    setForm({ username: user.username, phone: savedPhone });
+    setForm({ username: user.username, phone: savedPhone, email: user.email });
     setError("");
     setMessage("");
+    setOtpStep(false);
+    setOtp("");
     setEditing(true);
   };
 
-  // Cancel: jo kuch type kiya tha wo hat jata hai, purani saved value wapas
   const cancelEdit = () => {
-    setForm({ username: user.username, phone: savedPhone });
+    setForm({ username: user.username, phone: savedPhone, email: user.email });
     setError("");
+    setOtpStep(false);
+    setOtp("");
     setEditing(false);
   };
 
+  // Step 1: Save dabaya → agar email change hua to OTP bhejo
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!canSave) return;
@@ -68,17 +94,66 @@ export default function Profile() {
     setMessage("");
     setSaving(true);
 
-    // Sirf wahi fields bhejo jo badle hain
-    const payload = {};
-    if (usernameChanged) payload.username = username;
-    if (phoneChanged) payload.phone = form.phone;
+    try {
+      if (emailChanged) {
+        // Pehle naye email pe OTP bhejo
+        await api.post("/auth/request-email-change", { newEmail: email });
+        setPendingEmail(email);
+        setOtpStep(true);
+        setMessage(`OTP sent to ${email}. Please enter it below.`);
+      } else {
+        // Sirf username / phone change
+        const payload = {};
+        if (usernameChanged) payload.username = username;
+        if (phoneChanged) payload.phone = form.phone;
+
+        const res = await api.patch("/auth/me", payload);
+        setUser(res.data.user);
+        setForm({
+          username: res.data.user.username,
+          phone: res.data.user.phone || "",
+          email: res.data.user.email,
+        });
+        setEditing(false);
+        setMessage("Your profile has been updated.");
+      }
+    } catch (err) {
+      setError(getError(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Step 2: OTP verify + final update
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    if (!otp || otp.length !== 6) {
+      setError("Please enter the 6-digit OTP");
+      return;
+    }
+
+    setError("");
+    setSaving(true);
 
     try {
-      const res = await api.patch("/auth/me", payload);
-      setUser(res.data.user); // navbar me bhi naya naam turant dikhega
-      setForm({ username: res.data.user.username, phone: res.data.user.phone || "" });
-      setEditing(false); // wapas locked mode
-      setMessage("Your profile has been updated.");
+      const payload = {
+        newEmail: pendingEmail,
+        otp,
+      };
+      if (usernameChanged) payload.username = username;
+      if (phoneChanged) payload.phone = form.phone;
+
+      const res = await api.post("/auth/verify-email-change", payload);
+      setUser(res.data.user);
+      setForm({
+        username: res.data.user.username,
+        phone: res.data.user.phone || "",
+        email: res.data.user.email,
+      });
+      setEditing(false);
+      setOtpStep(false);
+      setOtp("");
+      setMessage("Email updated successfully! All future messages will go to your new email.");
     } catch (err) {
       setError(getError(err));
     } finally {
@@ -87,8 +162,8 @@ export default function Profile() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="card space-y-5" noValidate>
-      {/* Header: avatar + naam + Edit button */}
+    <form onSubmit={otpStep ? handleVerifyOtp : handleSubmit} className="card space-y-5" noValidate>
+      {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand text-2xl font-bold uppercase text-white">
@@ -102,7 +177,6 @@ export default function Profile() {
 
         {!editing && (
           <button
-            key="edit-btn"
             type="button"
             onClick={startEdit}
             className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-800 hover:bg-gray-50"
@@ -113,11 +187,12 @@ export default function Profile() {
         )}
       </div>
 
-      {editing && (
+      {editing && !otpStep && (
         <p className="rounded-lg border border-blue-200 bg-blue-50 p-2.5 text-sm text-blue-800">
-          You are editing your profile. Click <b>Save changes</b> when you are done, or <b>Cancel</b> to keep things as they were.
+          You are editing your profile. If you change email, we will send an OTP to the <b>new</b> email for verification.
         </p>
       )}
+
       {message && (
         <p role="status" className="rounded-lg border border-green-200 bg-green-50 p-2.5 text-sm text-green-700">
           {message}
@@ -129,74 +204,94 @@ export default function Profile() {
         </p>
       )}
 
-      {/* Username */}
-      <div>
-        <label htmlFor="profile-username" className="label">Username</label>
-        <input
-          id="profile-username"
-          ref={usernameRef}
-          className={`input ${lockedClass}`}
-          value={editing ? form.username : `@${user.username}`}
-          onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
-          placeholder="Choose a username"
-          autoComplete="off"
-          autoCapitalize="none"
-          spellCheck="false"
-          maxLength={30}
-          disabled={!editing}
-          aria-invalid={editing && Boolean(usernameError)}
-        />
-        {editing && usernameError ? (
-          <p className="mt-1 text-xs text-red-600">{usernameError}</p>
-        ) : (
-          <p className="mt-1 text-xs text-gray-600">Your unique name on Wanderlust.</p>
-        )}
-      </div>
+      {/* ========== OTP Step ========== */}
+      {otpStep ? (
+        <div className="space-y-4">
+          <div>
+            <label className="label">Enter OTP sent to {pendingEmail}</label>
+            <input
+              className="input tracking-widest"
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              placeholder="6-digit OTP"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              autoFocus
+              required
+            />
+          </div>
 
-      {/* Email: hamesha locked (verified) */}
-      <div>
-        <div className="mb-1 flex items-center justify-between">
-          <label htmlFor="profile-email" className="label !mb-0">Email address</label>
-          <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">✓ Verified</span>
+          <div className="flex gap-3">
+            <button type="submit" className="btn flex-1" disabled={saving || otp.length !== 6}>
+              {saving ? "Verifying..." : "Verify & Update Email"}
+            </button>
+            <button type="button" onClick={cancelEdit} className="rounded-lg border px-4 py-2 text-sm font-semibold">
+              Cancel
+            </button>
+          </div>
         </div>
-        <input id="profile-email" className={`input ${lockedClass}`} value={user.email} disabled />
-        <p className="mt-1 text-xs text-gray-600">Email cannot be changed because it is used to verify your account.</p>
-      </div>
+      ) : (
+        /* ========== Normal Edit Form ========== */
+        <>
+          {/* Username */}
+          <div>
+            <label className="label">Username</label>
+            <input
+              ref={usernameRef}
+              className={`input ${lockedClass}`}
+              value={form.username}
+              onChange={(e) => setForm({ ...form, username: e.target.value })}
+              disabled={!editing}
+              required
+            />
+            {editing && usernameError && <p className="mt-1 text-sm text-red-600">{usernameError}</p>}
+          </div>
 
-      {/* Mobile */}
-      <div>
-        <label htmlFor="profile-phone" className="label">Mobile number</label>
-        <div className="flex">
-          <span className={`inline-flex items-center rounded-l-lg border border-r-0 bg-gray-50 px-3 text-sm font-medium text-gray-700 ${editing ? "border-gray-500" : "border-gray-300"}`}>+91</span>
-          <input
-            id="profile-phone"
-            className={`input !rounded-l-none ${lockedClass}`}
-            value={form.phone}
-            onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }))}
-            placeholder={editing ? "Enter your mobile number" : "Not added yet"}
-            inputMode="numeric"
-            autoComplete="tel-national"
-            maxLength={10}
-            disabled={!editing}
-            aria-invalid={editing && Boolean(phoneError)}
-          />
-        </div>
-        {editing && phoneError ? (
-          <p className="mt-1 text-xs text-red-600">{phoneError}</p>
-        ) : (
-          <p className="mt-1 text-xs text-gray-600">Hosts and guests use this number to contact you about bookings.</p>
-        )}
-      </div>
+          {/* Email */}
+          <div>
+            <label className="label">Email</label>
+            <input
+              className={`input ${lockedClass}`}
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              disabled={!editing}
+              required
+            />
+            {editing && emailError && <p className="mt-1 text-sm text-red-600">{emailError}</p>}
+            {editing && emailChanged && (
+              <p className="mt-1 text-xs text-amber-600">
+                Changing email will require OTP verification on the new address.
+              </p>
+            )}
+          </div>
 
-      {editing && (
-        <div className="grid grid-cols-2 gap-3 pt-1">
-          <button key="cancel-btn" type="button" onClick={cancelEdit} disabled={saving} className="rounded-lg border border-gray-300 bg-white py-2 font-semibold text-gray-800 hover:bg-gray-50 disabled:opacity-50">
-            Cancel
-          </button>
-          <button key="save-btn" type="submit" disabled={!canSave} className="rounded-lg bg-brand py-2 font-semibold text-white hover:opacity-90 disabled:opacity-50">
-            {saving ? "Saving..." : "Save changes"}
-          </button>
-        </div>
+          {/* Phone */}
+          <div>
+            <label className="label">Mobile number</label>
+            <input
+              className={`input ${lockedClass}`}
+              type="tel"
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+              disabled={!editing}
+              placeholder="10-digit number"
+            />
+            {editing && phoneError && <p className="mt-1 text-sm text-red-600">{phoneError}</p>}
+          </div>
+
+          {editing && (
+            <div className="flex gap-3 pt-2">
+              <button type="submit" className="btn flex-1" disabled={!canSave}>
+                {saving ? "Saving..." : "Save changes"}
+              </button>
+              <button type="button" onClick={cancelEdit} className="rounded-lg border px-4 py-2 text-sm font-semibold">
+                Cancel
+              </button>
+            </div>
+          )}
+        </>
       )}
     </form>
   );

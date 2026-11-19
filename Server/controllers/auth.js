@@ -185,6 +185,76 @@ module.exports.updateProfile = async (req, res) => {
   res.json({ user: publicUser(req.user) });
 };
 
+// ---------- EMAIL CHANGE (Step 1: OTP bhejo) ----------
+
+module.exports.requestEmailChange = async (req, res) => {
+  const newEmail = (req.body.newEmail || "").trim().toLowerCase();
+
+  if (newEmail === req.user.email) {
+    throw new ExpressError(400, "This is already your current email");
+  }
+
+  // Naya email kisi aur ke paas to nahi?
+  if (await User.exists({ email: newEmail })) {
+    throw new ExpressError(409, "This email is already registered");
+  }
+
+  // OTP naye email pe bhejo
+  await issueOtp(newEmail, "email-change");
+
+  res.json({ 
+    message: "OTP sent to your new email address", 
+    newEmail 
+  });
+};
+
+// ---------- EMAIL CHANGE (Step 2: OTP verify + update) ----------
+
+module.exports.verifyEmailChange = async (req, res) => {
+  const { newEmail, otp, username, phone } = req.body;
+  const email = (newEmail || "").trim().toLowerCase();
+
+  // OTP check (naye email pe)
+  await checkOtp(email, "email-change", otp);
+
+  // Double check: email abhi bhi free hai
+  if (await User.exists({ email, _id: { $ne: req.user._id } })) {
+    throw new ExpressError(409, "This email is already registered");
+  }
+
+  // Email update
+  req.user.email = email;
+
+  // Optional: saath me username / phone bhi update kar sakte ho
+  if (username !== undefined && username !== req.user.username) {
+    if (await User.exists({ username, _id: { $ne: req.user._id } })) {
+      throw new ExpressError(409, "Username already taken");
+    }
+    req.user.username = username;
+  }
+
+  if (phone !== undefined && phone !== req.user.phone) {
+    if (phone && await User.exists({ phone, _id: { $ne: req.user._id } })) {
+      throw new ExpressError(409, "Phone number already registered");
+    }
+    req.user.phone = phone || undefined;
+  }
+
+  try {
+    await req.user.save();
+  } catch (err) {
+    if (err.code === 11000) {
+      throw new ExpressError(409, "That username, email or phone is already in use");
+    }
+    throw err;
+  }
+
+  res.json({ 
+    message: "Email updated successfully", 
+    user: publicUser(req.user) 
+  });
+};
+
 // Step 1: sirf registered email par OTP jayega
 module.exports.forgotPassword = async (req, res) => {
   const { email } = req.body;

@@ -105,7 +105,7 @@ module.exports.mine = async (req, res) => {
   const bookings = await Booking.find({ guest: req.user._id })
     .populate({
       path: "listing",
-      select: "title image location country owner",
+      select: "title image location country owner geometry",
       populate: { path: "owner", select: "username phone" },
     })
     .sort("-createdAt");
@@ -157,4 +157,22 @@ module.exports.cancel = async (req, res) => {
   }
 
   res.json({ booking, refundAmount });
+};
+// Sirf cancelled / expired booking delete (apni hi)
+module.exports.remove = async (req, res) => {
+  const booking = await Booking.findOne({ _id: req.params.id, guest: req.user._id });
+  if (!booking) throw new ExpressError(404, "Booking not found");
+  if (!["cancelled", "expired"].includes(booking.status)) {
+    throw new ExpressError(400, "Only cancelled or expired bookings can be deleted");
+  }
+  await booking.deleteOne();
+  res.json({ message: "Booking deleted" });
+};
+
+module.exports.clearCancelled = async (req, res) => {
+  const result = await Booking.deleteMany({
+    guest: req.user._id,
+    status: { $in: ["cancelled", "expired"] },
+  });
+  res.json({ message: "Cancelled bookings cleared", deleted: result.deletedCount });
 };

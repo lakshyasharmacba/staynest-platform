@@ -99,3 +99,41 @@ module.exports.destroy = async (req, res) => {
   await deleteListing(req.listing);
   res.json({ message: "Listing deleted" });
 };
+module.exports.update = async (req, res) => {
+  const listing = req.listing;
+
+  // Confirmed upcoming booking hai to edit mat allow karo
+  const activeBooking = await Booking.exists({
+    listing: listing._id,
+    status: "confirmed",
+    checkOut: { $gt: new Date() },
+  });
+  if (activeBooking) {
+    throw new ExpressError(
+      409,
+      "Cannot update: this listing has upcoming confirmed bookings"
+    );
+  }
+
+  const { location, country } = req.body;
+
+  if (location !== listing.location || country !== listing.country) {
+    listing.geometry = {
+      type: "Point",
+      coordinates: await geocode(location, country),
+    };
+  }
+  if (req.file) {
+    if (
+      listing.image &&
+      listing.image.filename &&
+      listing.image.filename !== "default-image"
+    ) {
+      await cloudinary.uploader.destroy(listing.image.filename).catch(() => {});
+    }
+    listing.image = { url: req.file.path, filename: req.file.filename };
+  }
+  Object.assign(listing, req.body);
+  await listing.save();
+  res.json({ listing });
+};

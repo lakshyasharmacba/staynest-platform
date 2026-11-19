@@ -18,7 +18,6 @@ function GoogleLogo() {
 const BTN_CLASS =
   "flex w-full items-center justify-center gap-3 rounded-xl border border-gray-300 bg-white px-4 py-3 text-[15px] font-semibold text-gray-700 shadow-sm transition hover:border-gray-400 hover:bg-gray-50 hover:shadow focus-visible:ring-2 focus-visible:ring-brand active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60";
 
-// useGoogleLogin sirf <GoogleOAuthProvider> ke andar chalta hai (main.jsx me tabhi lagta hai jab client id ho).
 function GoogleButton({ onError }) {
   const { setUser } = useAuth();
   const navigate = useNavigate();
@@ -31,8 +30,15 @@ function GoogleButton({ onError }) {
     onSuccess: async (tokenResponse) => {
       try {
         const res = await api.post("/auth/google", { accessToken: tokenResponse.access_token });
-        setUser(res.data.user);
-        navigate(from, { replace: true });
+        const user = res.data.user;
+        setUser(user);
+
+        // Phone nahi hai → pehle number lo (booking ke liye zaroori)
+        if (!user.phone) {
+          navigate("/complete-phone", { replace: true, state: { from } });
+        } else {
+          navigate(from, { replace: true });
+        }
       } catch (err) {
         onError?.(getError(err));
         setLoading(false);
@@ -59,10 +65,7 @@ function GoogleButton({ onError }) {
   return (
     <button type="button" onClick={handleClick} disabled={loading} className={BTN_CLASS}>
       {loading ? (
-        <>
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-700" aria-hidden="true" />
-          Connecting to Google...
-        </>
+        <>Connecting to Google...</>
       ) : (
         <>
           <GoogleLogo />
@@ -73,12 +76,13 @@ function GoogleButton({ onError }) {
   );
 }
 
-// Client id na ho tab bhi button dikhta hai; click par saaf message milta hai
 function GoogleButtonDisabled({ onError }) {
   return (
     <button
       type="button"
-      onClick={() => onError?.("Google sign-in is not set up yet. Add VITE_GOOGLE_CLIENT_ID in Client/.env and restart.")}
+      onClick={() =>
+        onError?.("Google sign-in is not set up yet. Add VITE_GOOGLE_CLIENT_ID in Client/.env and restart.")
+      }
       className={BTN_CLASS}
     >
       <GoogleLogo />
@@ -93,7 +97,10 @@ export default function GoogleAuthButton({ onError, dividerText = "or" }) {
   return (
     <div className="space-y-4">
       {configured ? <GoogleButton onError={onError} /> : <GoogleButtonDisabled onError={onError} />}
-      <div className="flex items-center gap-3 text-xs font-medium uppercase tracking-wide text-gray-500" role="separator">
+      <div
+        className="flex items-center gap-3 text-xs font-medium uppercase tracking-wide text-gray-500"
+        role="separator"
+      >
         <span className="h-px flex-1 bg-gray-200" />
         <span>{dividerText}</span>
         <span className="h-px flex-1 bg-gray-200" />

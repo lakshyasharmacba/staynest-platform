@@ -9,6 +9,8 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const { setUser } = useAuth();
+
+  // Always start empty – reduces browser autofill noise
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -27,7 +29,7 @@ export default function Login() {
       setUser(res.data.user);
       navigate(location.state?.from || "/", { replace: true });
     } catch (err) {
-      // Email verify nahi hai -> backend ne naya OTP bhej diya, OTP screen pe bhejo
+      // Unverified email → OTP flow
       if (err.response?.data?.needsVerification) {
         const verifyEmail = err.response.data.email;
         sessionStorage.setItem("pending_otp_email", verifyEmail);
@@ -40,7 +42,11 @@ export default function Login() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="card space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      className="card space-y-4"
+      autoComplete="off"          // form level off
+    >
       <div>
         <h2 className="text-2xl font-bold">Welcome back</h2>
         <p className="mt-1 text-sm text-gray-600">Enter your details to continue.</p>
@@ -55,7 +61,9 @@ export default function Login() {
       <GoogleAuthButton onError={setError} />
 
       <div>
-        <label htmlFor="login-id" className="label">Email or username</label>
+        <label htmlFor="login-id" className="label">
+          Email or username
+        </label>
         <input
           id="login-id"
           className="input"
@@ -64,7 +72,7 @@ export default function Login() {
           placeholder="you@example.com"
           value={form.email}
           onChange={handleChange}
-          autoComplete="username"
+          autoComplete="off"           // stronger than "username"
           autoCapitalize="none"
           spellCheck="false"
           required
@@ -72,14 +80,16 @@ export default function Login() {
       </div>
 
       <div>
-        <label htmlFor="login-password" className="label">Password</label>
+        <label htmlFor="login-password" className="label">
+          Password
+        </label>
         <PasswordInput
           id="login-password"
           name="password"
           placeholder="Your password"
           value={form.password}
           onChange={handleChange}
-          autoComplete="current-password"
+          autoComplete="new-password"  // tricks most browsers away from autofill
           required
         />
       </div>

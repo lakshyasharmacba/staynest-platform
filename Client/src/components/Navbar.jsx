@@ -3,10 +3,18 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import ConfirmDialog from "./ConfirmDialog";
 
-/* ---------- Chhote icons (stroke style, text ke rang me) ---------- */
 function Icon({ d, className = "h-5 w-5" }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
       <path d={d} />
     </svg>
   );
@@ -22,10 +30,11 @@ const ICONS = {
   chevron: "M19.5 8.25l-7.5 7.5-7.5-7.5",
 };
 
-/* Username ka pehla akshar, gol avatar me */
 function Avatar({ name, size = "h-8 w-8 text-sm" }) {
   return (
-    <span className={`flex ${size} shrink-0 items-center justify-center rounded-full bg-brand font-bold uppercase text-white`}>
+    <span
+      className={`flex ${size} shrink-0 items-center justify-center rounded-full bg-brand font-bold uppercase text-white`}
+    >
       {(name || "?").charAt(0)}
     </span>
   );
@@ -46,7 +55,6 @@ export default function Navbar() {
   const closeTimer = useRef(null);
   const lastPointer = useRef("mouse");
 
-  // Mouse hover par menu kholo; mouse hatne par thodi der baad band (flicker na ho)
   const openNow = () => {
     clearTimeout(closeTimer.current);
     setMenuOpen(true);
@@ -56,14 +64,12 @@ export default function Navbar() {
     closeTimer.current = setTimeout(() => setMenuOpen(false), 150);
   };
 
-  // Page badalne par menu band
   useEffect(() => {
     setMenuOpen(false);
   }, [location.pathname]);
 
   useEffect(() => () => clearTimeout(closeTimer.current), []);
 
-  // Bahar click / touch ya Esc dabane par band
   useEffect(() => {
     if (!menuOpen) return undefined;
     const onOutside = (e) => {
@@ -85,7 +91,6 @@ export default function Navbar() {
     };
   }, [menuOpen]);
 
-  /* ---------- Logout: pehle "Are you sure?" popup ---------- */
   const askLogout = () => {
     setMenuOpen(false);
     setLogoutError("");
@@ -110,33 +115,43 @@ export default function Navbar() {
     }
   };
 
+  // Dropdown me sirf ye 3 (+ Admin)
   const menuItems = [
     { to: "/profile", label: "My profile", icon: ICONS.user },
-    { to: "/bookings", label: "My bookings", icon: ICONS.calendar },
-    { to: "/wishlist", label: "Saved stays", icon: ICONS.heart },
-    { to: "/host", label: "Host dashboard", icon: ICONS.home },
+    { to: "/host", label: "Become a Host", icon: ICONS.home },
   ];
-  if (user?.role === "admin") menuItems.push({ to: "/admin", label: "Admin panel", icon: ICONS.shield, admin: true });
+  if (user?.role === "admin") {
+    menuItems.push({ to: "/admin", label: "Admin panel", icon: ICONS.shield, admin: true });
+  }
 
   return (
     <>
       <nav className="sticky top-0 z-40 flex items-center justify-between border-b bg-white px-4 py-2.5 shadow-sm sm:px-6">
+        {/* Logo */}
         <Link to="/" className="text-xl font-bold text-brand">
           Wanderlust
         </Link>
 
-        <div className="flex items-center gap-2 text-sm sm:gap-3">
+        <div className="flex items-center gap-1 text-sm sm:gap-2">
           {user ? (
             <>
+              {/* Bahar: My bookings + Saved stays */}
               <Link
-                to="/host"
-                className="hidden items-center gap-1.5 rounded-full px-3 py-1.5 font-semibold text-gray-800 hover:bg-gray-100 sm:inline-flex"
+                to="/bookings"
+                className="hidden items-center gap-1.5 rounded-full px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-100 sm:inline-flex"
               >
-                <Icon d={ICONS.home} className="h-4 w-4" />
-                Host
+                <Icon d={ICONS.calendar} className="h-4 w-4" />
+                My bookings
+              </Link>
+              <Link
+                to="/wishlist"
+                className="hidden items-center gap-1.5 rounded-full px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-100 sm:inline-flex"
+              >
+                <Icon d={ICONS.heart} className="h-4 w-4" />
+                Saved stays
               </Link>
 
-              {/* Profile icon + dropdown (hover / click dono se khulta hai) */}
+              {/* Avatar + Dropdown */}
               <div
                 ref={wrapperRef}
                 className="relative"
@@ -147,7 +162,6 @@ export default function Navbar() {
                   if (e.pointerType === "mouse") closeSoon();
                 }}
                 onBlur={(e) => {
-                  // Keyboard se Tab karke bahar nikle to band
                   if (e.relatedTarget && !e.currentTarget.contains(e.relatedTarget)) closeSoon();
                 }}
               >
@@ -161,7 +175,6 @@ export default function Navbar() {
                     lastPointer.current = e.pointerType;
                   }}
                   onClick={() => {
-                    // Mouse se hover pe pehle hi khul chuka hota hai -> click par khula hi rahe; touch/keyboard par toggle
                     if (lastPointer.current === "mouse") setMenuOpen(true);
                     else setMenuOpen((o) => !o);
                     lastPointer.current = "keyboard";
@@ -171,27 +184,28 @@ export default function Navbar() {
                   }`}
                 >
                   <Avatar name={user.username} />
-                  <span className="hidden max-w-[110px] truncate font-semibold text-gray-800 sm:inline">{user.username}</span>
-                  <Icon d={ICONS.chevron} className={`h-4 w-4 text-gray-500 transition-transform ${menuOpen ? "rotate-180" : ""}`} />
+                  <span className="hidden max-w-[100px] truncate font-semibold text-gray-800 sm:inline">
+                    {user.username}
+                  </span>
+                  <Icon
+                    d={ICONS.chevron}
+                    className={`h-4 w-4 text-gray-500 transition-transform ${menuOpen ? "rotate-180" : ""}`}
+                  />
                 </button>
 
                 {menuOpen && (
-                  // pt-2 = button aur menu ke beech "bridge", taaki mouse le jaate waqt menu band na ho
-                  <div className="absolute right-0 top-full z-50 w-72 pt-2">
-                    <div role="menu" aria-label="Account" className="overflow-hidden rounded-xl border bg-white shadow-xl">
+                  <div className="absolute right-0 top-full z-50 w-56 pt-2">
+                    <div role="menu" className="overflow-hidden rounded-xl border bg-white shadow-xl">
+                      {/* User info */}
                       <div className="flex items-center gap-3 border-b bg-gray-50 px-4 py-3">
-                        <Avatar name={user.username} size="h-10 w-10 text-base" />
+                        <Avatar name={user.username} size="h-9 w-9 text-sm" />
                         <div className="min-w-0">
-                          <p className="flex items-center gap-2 truncate font-semibold text-gray-900">
-                            @{user.username}
-                            {user.role === "admin" && (
-                              <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-purple-700">Admin</span>
-                            )}
-                          </p>
-                          <p className="truncate text-xs text-gray-600">{user.email}</p>
+                          <p className="truncate font-semibold text-gray-900">@{user.username}</p>
+                          <p className="truncate text-xs text-gray-500">{user.email}</p>
                         </div>
                       </div>
 
+                      {/* Only Profile + Hosting (+ Admin) */}
                       <div className="py-1">
                         {menuItems.map((item) => (
                           <Link
@@ -209,6 +223,7 @@ export default function Navbar() {
                         ))}
                       </div>
 
+                      {/* Logout */}
                       <div className="border-t py-1">
                         <button
                           type="button"
@@ -226,11 +241,18 @@ export default function Navbar() {
               </div>
             </>
           ) : (
+            /* Guest */
             <>
-              <Link to="/login" className="rounded-full px-3 py-1.5 font-semibold text-gray-800 hover:bg-gray-100">
+              <Link
+                to="/login"
+                className="rounded-full px-3 py-1.5 font-semibold text-gray-800 hover:bg-gray-100"
+              >
                 Login
               </Link>
-              <Link to="/signup" className="rounded-lg bg-brand px-4 py-1.5 font-semibold text-white hover:opacity-90">
+              <Link
+                to="/signup"
+                className="rounded-lg bg-brand px-4 py-1.5 font-semibold text-white hover:opacity-90"
+              >
                 Sign up
               </Link>
             </>

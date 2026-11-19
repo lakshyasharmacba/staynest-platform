@@ -53,7 +53,6 @@ if (process.env.NODE_ENV === "production") {
       role: "user",
     });
   }
-
   // Seed admin user (verified, role = admin)
   let admin = await User.findOne({ email: "admin@wanderlust.local" });
   if (!admin) {
@@ -68,6 +67,7 @@ if (process.env.NODE_ENV === "production") {
   }
 
   // PEHLE: Listing.deleteMany({}) -> sabki listings ud jati thi. Ab sirf demo host ki purani listings hatengi.
+
   await Listing.deleteMany({ owner: host._id });
   const docs = initData.data.map((l) => ({
     ...l,

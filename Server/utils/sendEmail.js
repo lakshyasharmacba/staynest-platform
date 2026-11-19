@@ -26,6 +26,7 @@ const getTransporter = () => {
 const TITLES = {
   signup: "Verify Your Email Address",
   reset: "Reset Your Account Password",
+"email-change": "Confirm Your New Email Address",
 };
 
 /**

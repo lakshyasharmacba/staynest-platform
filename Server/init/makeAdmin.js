@@ -8,7 +8,6 @@ if (!email) {
   console.error("Usage: npm run make-admin -- <email>");
   process.exit(1);
 }
-
 (async () => {
   await mongoose.connect(process.env.MONGO_URL || "mongodb://127.0.0.1:27017/wanderlust");
   const user = await User.findOne({ email: email.toLowerCase().trim() });

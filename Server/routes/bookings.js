@@ -9,6 +9,8 @@ router.post("/listings/:listingId/bookings", requireAuth, validate(schemas.booki
 router.get("/bookings/mine", requireAuth, bookings.mine);
 router.get("/bookings/host", requireAuth, bookings.host);
 router.patch("/bookings/:id/cancel", requireAuth, bookings.cancel);
+router.delete("/bookings/clear-cancelled", requireAuth, bookings.clearCancelled); // pehle
+router.delete("/bookings/:id", requireAuth, bookings.remove);                     // baad me
 router.post("/payments/verify", requireAuth, validate(schemas.verifyPayment), payments.verify);
 
 module.exports = router;
