@@ -17,7 +17,8 @@ const payments = require("./controllers/payments");
 });
 
 const app = express();
-if (process.env.NODE_ENV === "production") app.set("trust proxy", 1); // Render/Heroku ke peeche sahi IP
+app.set("trust proxy", 1);
+if (process.env.NODE_ENV === "production"); // Render/Heroku ke peeche sahi IP
 
 app.use(helmet());
 app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:5173", credentials: true }));
