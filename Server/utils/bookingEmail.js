@@ -31,7 +31,7 @@ async function sendBookingConfirmedEmails(bookingId) {
 
     // 1. Guest Receipt Email
     await transporter.sendMail({
-      from: `"Wanderlust" <${process.env.EMAIL_USER}>`,
+      from: `"Wanderlust" <${process.env.RESEND_API_KEY}>`,
       to: guest.email,
       subject: `Booking Confirmed: ${listing.title} - Wanderlust`,
       html: `
@@ -61,7 +61,7 @@ async function sendBookingConfirmedEmails(bookingId) {
 
     // 2. Host Notification Email
     await transporter.sendMail({
-      from: `"Wanderlust" <${process.env.EMAIL_USER}>`,
+      from: `"Wanderlust" <${process.env.RESEND_API_KEY}>`,
       to: host.email,
       subject: `New Booking Confirmed: ${listing.title} - Wanderlust`,
       html: `
@@ -120,7 +120,7 @@ async function sendBookingCancelledEmails(bookingId, refundAmount = 0) {
 
     // 1. Guest Cancellation Email
     await transporter.sendMail({
-      from: `"Wanderlust" <${process.env.EMAIL_USER}>`,
+      from: `"Wanderlust" <${process.env.RESEND_API_KEY}>`,
       to: guest.email,
       subject: `Booking Cancelled: ${listing.title} - Wanderlust`,
       html: `
@@ -138,7 +138,7 @@ async function sendBookingCancelledEmails(bookingId, refundAmount = 0) {
 
     // 2. Host Cancellation Email
     await transporter.sendMail({
-      from: `"Wanderlust" <${process.env.EMAIL_USER}>`,
+      from: `"Wanderlust" <${process.env.RESEND_API_KEY}>`,
       to: host.email,
       subject: `Booking Cancelled: ${listing.title} - Wanderlust`,
       html: `
