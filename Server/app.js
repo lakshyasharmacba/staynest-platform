@@ -9,7 +9,7 @@ const Booking = require("./models/Booking");
 const payments = require("./controllers/payments");
 
 // Zaroori env variables nahi hue to server start hi nahi hoga (silent bug se better)
-["JWT_SECRET", "OTP_SECRET", "RESEND_API_KEY", "EMAIL_PASS", "RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET"].forEach((k) => {
+["JWT_SECRET", "OTP_SECRET", "RESEND_API_KEY", "RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET"].forEach((k) => {
   if (!process.env[k]) {
     console.error(`Missing env variable: ${k} (copy .env.example to .env)`);
     process.exit(1);
